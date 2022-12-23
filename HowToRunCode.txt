@@ -1,0 +1,25 @@
+1.Keep all the files in a local folder
+
+2.Open Anaconda command prompt and type in your drive name and navigate to the folder location
+Commands(Example)
+a)E:
+b)cd E:\Projects\Uniformity_Final\UniformityApp\
+
+Make sure the depenencies are installed(needs to be done only once)
+Command: pip install -r requirements.txt
+
+
+3.Make Sure the file(Full_Data.xls) is kept in the directory and start streamlit server in anaconda
+Command:python -m streamlit run uniformity_V9.py
+
+
+#####To Note##############
+1.Team can add new data in the same format in the excel file for running it in future
+2.Only ['gt_dom','rej_param','tbmref','curing_machine','BARCODE','RFVCW', 'CONICITY', 'Static'] columns are mandatory in the data. Team can ignore or delete the rest of the columns without affecting tool functionality 
+
+
+Docker
+docker build . -t uniformity-docker -f Dockerfile.txt
+
+docker run -p 8501:8501 uniformity-docker:latest
+

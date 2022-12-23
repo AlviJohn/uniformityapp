@@ -1,0 +1,9 @@
+protobuf~=3.19.0
+chart_studio==1.1.0
+numpy
+pandas
+Pillow==9.0.1
+plotly==5.6.0
+streamlit==1.6.0
+xlrd == 1.1.0
+
