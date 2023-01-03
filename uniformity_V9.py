@@ -11,8 +11,10 @@ import time
 from PIL import Image
 
 ######Setting the Basics for the Page
-st.set_page_config(page_title="UniformityApp", page_icon="muscleman.jpg", layout="wide", initial_sidebar_state="auto")
-st.title('Uniformity Dashboard')
+st.set_page_config(page_title="UniformityApplication", page_icon="muscleman.jpg", layout="wide", initial_sidebar_state="auto")
+st.title('Uniformity Dashboard Application')
+
+
 
 
 #########################################Helper Functions###########################################
@@ -111,7 +113,7 @@ def data_paramchart(df):
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
     df = pd.read_excel(pd.read_excel(uploaded_file,sheet_name='Sheet1')
-df= process_input(df):
+    df= process_input(df):
 
 
 ###########################################Selections#########################################
