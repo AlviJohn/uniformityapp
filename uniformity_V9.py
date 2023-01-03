@@ -19,7 +19,6 @@ st.title('Uniformity Dashboard')
 ##############################Reading the Data and basic Processing of datetime
 @st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def process_input(df):
-
     df = df[['TireType','gt_dom','curing_dom','rej_param','tbmref','curing_machine','BARCODE','RFVCW', 'CONICITY', 'Static']]    
     df['gt_dom'] = pd.to_datetime(df['gt_dom'])
     df['curing_dom']=pd.to_datetime(df['curing_dom'])    
