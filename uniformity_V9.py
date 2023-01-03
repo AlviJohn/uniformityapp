@@ -19,34 +19,34 @@ st.title('Uniformity Dashboard')
 ##############################Reading the Data and basic Processing of datetime
 @st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def read_input():
-    df = pd.read_excel(open('Full_Data.xls', 'rb'),
-              sheet_name='Sheet1')
+    uploaded_file = st.file_uploader("Choose a file")
+    if uploaded_file is not None:
+        df = pd.read_excel(pd.read_excel(uploaded_file,sheet_name='Sheet1')
+        df = df[['TireType','gt_dom','curing_dom','rej_param','tbmref','curing_machine','BARCODE','RFVCW', 'CONICITY', 'Static']]    
+        df['gt_dom'] = pd.to_datetime(df['gt_dom'])
+        df['curing_dom']=pd.to_datetime(df['curing_dom'])    
+        df=df.sort_values(by='gt_dom')
+        
+        df = df.dropna(subset = ['gt_dom', 'curing_dom'])
 
-    df = df[['TireType','gt_dom','curing_dom','rej_param','tbmref','curing_machine','BARCODE','RFVCW', 'CONICITY', 'Static']]    
-    df['gt_dom'] = pd.to_datetime(df['gt_dom'])
-    df['curing_dom']=pd.to_datetime(df['curing_dom'])    
-    df=df.sort_values(by='gt_dom')
-    
-    df = df.dropna(subset = ['gt_dom', 'curing_dom'])
+        ####Adjusting for GT Dom Time
+        df['Date'] = df['gt_dom'].dt.date
 
-    ####Adjusting for GT Dom Time
-    df['Date'] = df['gt_dom'].dt.date
+        df['hour_indicator'] =[ -1 if x<7 else 0 for x in df['gt_dom'].dt.hour]
+        df['Date'] = df['Date'] + df['hour_indicator'] * pd.to_timedelta("1day")
 
-    df['hour_indicator'] =[ -1 if x<7 else 0 for x in df['gt_dom'].dt.hour]
-    df['Date'] = df['Date'] + df['hour_indicator'] * pd.to_timedelta("1day")
-
-   
-    df['Curing_Date']=df['curing_dom'].dt.date
-    df['curing_hour_indicator'] =[ -1 if x<7 else 0 for x in df['curing_dom'].dt.hour]
-    df['Curing_Date'] = df['Curing_Date'] + df['curing_hour_indicator'] * pd.to_timedelta("1day")
        
-    #df.to_csv('test1.csv')    
-    df['rej_param'] = df['rej_param'].fillna('No Rejection')
-    df['Rejection_Reason'] = df['rej_param'].astype('str')
-    df['curing_machine'] = df['curing_machine'].astype('str').replace('\.0', '', regex=True)
-    df['Rejection_Reason'] = np.where(df['Rejection_Reason'].isin(['RFPP','RFH1','RFH2','LFPP']), 'RFPP',df['Rejection_Reason'])
-    #df['Rejection_Reason'] =df.replace(np.nan, 'No Rejection', regex=True)
-    df['uniformity_status'] = [0 if x == 'No Rejection' else 1 for x in df.Rejection_Reason]
+        df['Curing_Date']=df['curing_dom'].dt.date
+        df['curing_hour_indicator'] =[ -1 if x<7 else 0 for x in df['curing_dom'].dt.hour]
+        df['Curing_Date'] = df['Curing_Date'] + df['curing_hour_indicator'] * pd.to_timedelta("1day")
+           
+        #df.to_csv('test1.csv')    
+        df['rej_param'] = df['rej_param'].fillna('No Rejection')
+        df['Rejection_Reason'] = df['rej_param'].astype('str')
+        df['curing_machine'] = df['curing_machine'].astype('str').replace('\.0', '', regex=True)
+        df['Rejection_Reason'] = np.where(df['Rejection_Reason'].isin(['RFPP','RFH1','RFH2','LFPP']), 'RFPP',df['Rejection_Reason'])
+        #df['Rejection_Reason'] =df.replace(np.nan, 'No Rejection', regex=True)
+        df['uniformity_status'] = [0 if x == 'No Rejection' else 1 for x in df.Rejection_Reason]
     
   
 #    st.balloons()
