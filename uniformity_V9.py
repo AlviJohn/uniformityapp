@@ -17,11 +17,8 @@ st.title('Uniformity Dashboard')
 
 #########################################Helper Functions###########################################
 ##############################Reading the Data and basic Processing of datetime
-#@st.cache(suppress_st_warning=True,allow_output_mutation=True)
-def read_input():
-    uploaded_file = st.file_uploader("Choose a file")
-    if uploaded_file is not None:
-        df = pd.read_excel(pd.read_excel(uploaded_file,sheet_name='Sheet1')
+@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+def process_input(df):
         df = df[['TireType','gt_dom','curing_dom','rej_param','tbmref','curing_machine','BARCODE','RFVCW', 'CONICITY', 'Static']]    
         df['gt_dom'] = pd.to_datetime(df['gt_dom'])
         df['curing_dom']=pd.to_datetime(df['curing_dom'])    
@@ -111,7 +108,10 @@ def data_paramchart(df):
 
 
 
-df= read_input()
+uploaded_file = st.file_uploader("Choose a file")
+if uploaded_file is not None:
+    df = pd.read_excel(pd.read_excel(uploaded_file,sheet_name='Sheet1')
+df= process_input(df):
 
 
 ###########################################Selections#########################################
