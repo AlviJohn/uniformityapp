@@ -115,37 +115,38 @@ df= read_input()
 
 
 ###########################################Selections#########################################
-st.sidebar.title('Dashboard Filters')
-st.sidebar.text('Filters selected will be applied to \nonly Daily Yield,Daily Rejection & \nDaily Parameter Plots')
+if uploaded_file is not None:
+    st.sidebar.title('Dashboard Filters')
+    st.sidebar.text('Filters selected will be applied to \nonly Daily Yield,Daily Rejection & \nDaily Parameter Plots')
 
-###Selecting SKU
-SKU_choices = df['TireType'].unique().tolist()
-SKU_make_choice = st.sidebar.selectbox('Select SKU', SKU_choices)
-SKU_make_choice = SKU_make_choice
-
-
-###Selecting the TBM 
-TBM_choices = df['tbmref'].unique().tolist()
-TBM_make_choice = st.sidebar.selectbox('Select TBM', TBM_choices)
-TBM_make_choice = TBM_make_choice
-###########Selecting Cavity
-
-cavity_choices = df['curing_machine'].unique().tolist()
-cavity_choices_V2 =cavity_choices
-cavity_choices_V2.insert(0,"ALL")
-cavity_make_choice = st.sidebar.multiselect("Select one or more Cavities:",cavity_choices_V2,'ALL')
-
-if "ALL" in cavity_make_choice:
-    cavity_make_choice_final = cavity_choices
-else:
-    cavity_make_choice_final = cavity_make_choice
+    ###Selecting SKU
+    SKU_choices = df['TireType'].unique().tolist()
+    SKU_make_choice = st.sidebar.selectbox('Select SKU', SKU_choices)
+    SKU_make_choice = SKU_make_choice
 
 
-df_temp=df
-df_temp=df.loc[((df['tbmref'] ==TBM_make_choice)) & (df['curing_machine'].isin(cavity_make_choice_final))]
-df_Yield = Yield_charts(df_temp)
-df_stackchart = daily_charts(df_temp)
-df_paramchart = data_paramchart(df_temp)
+    ###Selecting the TBM 
+    TBM_choices = df['tbmref'].unique().tolist()
+    TBM_make_choice = st.sidebar.selectbox('Select TBM', TBM_choices)
+    TBM_make_choice = TBM_make_choice
+    ###########Selecting Cavity
+
+    cavity_choices = df['curing_machine'].unique().tolist()
+    cavity_choices_V2 =cavity_choices
+    cavity_choices_V2.insert(0,"ALL")
+    cavity_make_choice = st.sidebar.multiselect("Select one or more Cavities:",cavity_choices_V2,'ALL')
+
+    if "ALL" in cavity_make_choice:
+        cavity_make_choice_final = cavity_choices
+    else:
+        cavity_make_choice_final = cavity_make_choice
+
+
+    df_temp=df
+    df_temp=df.loc[((df['tbmref'] ==TBM_make_choice)) & (df['curing_machine'].isin(cavity_make_choice_final))]
+    df_Yield = Yield_charts(df_temp)
+    df_stackchart = daily_charts(df_temp)
+    df_paramchart = data_paramchart(df_temp)
 
 
 #######################################Functions for processing the charts#############################
