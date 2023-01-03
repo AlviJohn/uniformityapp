@@ -17,7 +17,7 @@ st.title('Uniformity Dashboard')
 
 #########################################Helper Functions###########################################
 ##############################Reading the Data and basic Processing of datetime
-@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+#@st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def read_input():
     uploaded_file = st.file_uploader("Choose a file")
     if uploaded_file is not None:
