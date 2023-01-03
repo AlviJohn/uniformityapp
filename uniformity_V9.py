@@ -11,41 +11,40 @@ import time
 from PIL import Image
 
 ######Setting the Basics for the Page
-st.set_page_config(page_title="UniformityApplication", page_icon="muscleman.jpg", layout="wide", initial_sidebar_state="auto")
-st.title('Uniformity Dashboard Application')
-
-
+st.set_page_config(page_title="UniformityApp", page_icon="muscleman.jpg", layout="wide", initial_sidebar_state="auto")
+st.title('Uniformity Dashboard')
 
 
 #########################################Helper Functions###########################################
 ##############################Reading the Data and basic Processing of datetime
 @st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def process_input(df):
-        df = df[['TireType','gt_dom','curing_dom','rej_param','tbmref','curing_machine','BARCODE','RFVCW', 'CONICITY', 'Static']]    
-        df['gt_dom'] = pd.to_datetime(df['gt_dom'])
-        df['curing_dom']=pd.to_datetime(df['curing_dom'])    
-        df=df.sort_values(by='gt_dom')
-        
-        df = df.dropna(subset = ['gt_dom', 'curing_dom'])
 
-        ####Adjusting for GT Dom Time
-        df['Date'] = df['gt_dom'].dt.date
+    df = df[['TireType','gt_dom','curing_dom','rej_param','tbmref','curing_machine','BARCODE','RFVCW', 'CONICITY', 'Static']]    
+    df['gt_dom'] = pd.to_datetime(df['gt_dom'])
+    df['curing_dom']=pd.to_datetime(df['curing_dom'])    
+    df=df.sort_values(by='gt_dom')
+    
+    df = df.dropna(subset = ['gt_dom', 'curing_dom'])
 
-        df['hour_indicator'] =[ -1 if x<7 else 0 for x in df['gt_dom'].dt.hour]
-        df['Date'] = df['Date'] + df['hour_indicator'] * pd.to_timedelta("1day")
+    ####Adjusting for GT Dom Time
+    df['Date'] = df['gt_dom'].dt.date
 
+    df['hour_indicator'] =[ -1 if x<7 else 0 for x in df['gt_dom'].dt.hour]
+    df['Date'] = df['Date'] + df['hour_indicator'] * pd.to_timedelta("1day")
+
+   
+    df['Curing_Date']=df['curing_dom'].dt.date
+    df['curing_hour_indicator'] =[ -1 if x<7 else 0 for x in df['curing_dom'].dt.hour]
+    df['Curing_Date'] = df['Curing_Date'] + df['curing_hour_indicator'] * pd.to_timedelta("1day")
        
-        df['Curing_Date']=df['curing_dom'].dt.date
-        df['curing_hour_indicator'] =[ -1 if x<7 else 0 for x in df['curing_dom'].dt.hour]
-        df['Curing_Date'] = df['Curing_Date'] + df['curing_hour_indicator'] * pd.to_timedelta("1day")
-           
-        #df.to_csv('test1.csv')    
-        df['rej_param'] = df['rej_param'].fillna('No Rejection')
-        df['Rejection_Reason'] = df['rej_param'].astype('str')
-        df['curing_machine'] = df['curing_machine'].astype('str').replace('\.0', '', regex=True)
-        df['Rejection_Reason'] = np.where(df['Rejection_Reason'].isin(['RFPP','RFH1','RFH2','LFPP']), 'RFPP',df['Rejection_Reason'])
-        #df['Rejection_Reason'] =df.replace(np.nan, 'No Rejection', regex=True)
-        df['uniformity_status'] = [0 if x == 'No Rejection' else 1 for x in df.Rejection_Reason]
+    #df.to_csv('test1.csv')    
+    df['rej_param'] = df['rej_param'].fillna('No Rejection')
+    df['Rejection_Reason'] = df['rej_param'].astype('str')
+    df['curing_machine'] = df['curing_machine'].astype('str').replace('\.0', '', regex=True)
+    df['Rejection_Reason'] = np.where(df['Rejection_Reason'].isin(['RFPP','RFH1','RFH2','LFPP']), 'RFPP',df['Rejection_Reason'])
+    #df['Rejection_Reason'] =df.replace(np.nan, 'No Rejection', regex=True)
+    df['uniformity_status'] = [0 if x == 'No Rejection' else 1 for x in df.Rejection_Reason]
     
   
 #    st.balloons()
@@ -112,12 +111,10 @@ def data_paramchart(df):
 
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
-    df = pd.read_excel(pd.read_excel(uploaded_file,sheet_name='Sheet1')
-    df= process_input(df):
+    df = pd.read_excel(uploaded_file,sheet_name='Sheet1')
+    df= process_input(df)
 
-
-###########################################Selections#########################################
-if uploaded_file is not None:
+    ###########################################Selections#########################################
     st.sidebar.title('Dashboard Filters')
     st.sidebar.text('Filters selected will be applied to \nonly Daily Yield,Daily Rejection & \nDaily Parameter Plots')
 
@@ -357,411 +354,412 @@ def Daily_rejection_trends(df_stackchart_trigger, max_date,lookback_time):
     
  
 #####################################Chart 1 Daily Yield Chart######################################################################
-with st.expander('Daily Yield Chart'):
-    
-    start = time.time()
-    MA_make_choice_chart1 = st.selectbox('Select the Level for Yeild Chart', 
-                                  ('Daily','3 Day Moving Average', 
-                                   '7 Day Moving Average', '5 Day Moving Average',
-                                   '14 Day Moving Average'))
+if uploaded_file is not None:
+    with st.expander('Daily Yield Chart'):
+        
+        start = time.time()
+        MA_make_choice_chart1 = st.selectbox('Select the Level for Yeild Chart', 
+                                      ('Daily','3 Day Moving Average', 
+                                       '7 Day Moving Average', '5 Day Moving Average',
+                                       '14 Day Moving Average'))
 
-    
-    if MA_make_choice_chart1=='3 Day Moving Average':
-        rolling_val=3
-    elif MA_make_choice_chart1=='Daily':
-        rolling_val=1    
-    elif MA_make_choice_chart1=='7 Day Moving Average':
-        rolling_val=7
-    elif MA_make_choice_chart1=='5 Day Moving Average':
-        rolling_val=5
-    elif MA_make_choice_chart1=='14 Day Moving Average':
-        rolling_val=14
-    
+        
+        if MA_make_choice_chart1=='3 Day Moving Average':
+            rolling_val=3
+        elif MA_make_choice_chart1=='Daily':
+            rolling_val=1    
+        elif MA_make_choice_chart1=='7 Day Moving Average':
+            rolling_val=7
+        elif MA_make_choice_chart1=='5 Day Moving Average':
+            rolling_val=5
+        elif MA_make_choice_chart1=='14 Day Moving Average':
+            rolling_val=14
+        
 
 
-    df_Yield,df_rejection = daily_chart1_Processing(df_Yield, MA_make_choice_chart1,rolling_val)
-    
+        df_Yield,df_rejection = daily_chart1_Processing(df_Yield, MA_make_choice_chart1,rolling_val)
+        
 
-    
-    fig = go.Figure()
-    fig.add_trace(go.Bar(x=list(df_Yield['Date']),
-                         y=list(df_Yield['Yield' + MA_make_choice_chart1]),name= 'Daily Yield',opacity=1,marker_line_color='#11457E'))
-    
-    
-    fig.update_layout(
-        title_text="TBM Yield Chart"
-    )
-    
-     
-    # Add range slider
-    fig.update_layout(
-        xaxis=dict(
-            rangeselector=dict(
-                buttons=list([
-                    dict(count=1,
-                         label="1day",
-                         step="day",
-                         stepmode="backward"),
-                    dict(count=3,
-                         label="3day",
-                         step="day",
-                         stepmode="backward"),
-                    dict(count=7,
-                         label="7day",
-                         step="day",
-                         stepmode="todate"),
-                    dict(count=14,
-                         label="14day",
-                         step="day",
-                         stepmode="backward"),
-                    dict(step="all")
-                ])
-            ),
-            rangeslider=dict(
-                visible=True
-            ),
-            type="date"
+        
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=list(df_Yield['Date']),
+                             y=list(df_Yield['Yield' + MA_make_choice_chart1]),name= 'Daily Yield',opacity=1,marker_line_color='#11457E'))
+        
+        
+        fig.update_layout(
+            title_text="TBM Yield Chart"
         )
-    )
-    
-    fig.update_layout(yaxis_range=[60,100])
-    st.plotly_chart(fig, use_container_width=True)
-    csv= df_Yield.to_csv().encode('utf-8')
-    st.download_button(
-   "Click to Download Data",
-    csv,
-   "TBM_Yield"+MA_make_choice_chart1+".csv",
-   "text/csv",
-   key='download-csv1'
-   )
-
-   
-    
-    
-    fig1 = px.bar(df_rejection, x="Date", y='Rejection' + MA_make_choice_chart1 , color="Rejection_Reason",
-                         text=[f'{i}%' for i in df_rejection['Rejection' + MA_make_choice_chart1]]) 
-    fig1.layout.yaxis.tickformat = '0'
-    fig1.update_layout(title_text= "TBM Rejection Chart")
-    st.plotly_chart(fig1, use_container_width=True)
-            
-    st.write("% s seconds to run the code" % round((time.time() - start),3))      
-   
-    csv= df_rejection[['Date','Rejection_Reason','num_tyres','Total_Tyres','Rejection' + MA_make_choice_chart1]].to_csv().encode('utf-8')
-    st.download_button(
-   "Click to Download Data",
-    csv,
-   "TBM_"+MA_make_choice_chart1+"_Rejection.csv",
-   "text/csv",
-   key='download-csv2'
-   )
-
-
-
-###########################################Chart 2--Cavity Chart
-with st.expander('Cavity Comparison -Overall'):
-    start = time.time()
-#########Calendar for Cacity Comparison
-    min_date = df['Curing_Date'].min()
-    max_date = df['Curing_Date'].max()
-    #######Date Selection for Cavity
-    col1, col2 = st.columns(2)
-    with col1:
-        start_date = st.date_input('Start date', min_date)
-    with col2:
-        end_date = st.date_input('End date', max_date)
-    if start_date > end_date:
-        st.error('Error: End date must fall after start date.')
         
-
-
+         
+        # Add range slider
+        fig.update_layout(
+            xaxis=dict(
+                rangeselector=dict(
+                    buttons=list([
+                        dict(count=1,
+                             label="1day",
+                             step="day",
+                             stepmode="backward"),
+                        dict(count=3,
+                             label="3day",
+                             step="day",
+                             stepmode="backward"),
+                        dict(count=7,
+                             label="7day",
+                             step="day",
+                             stepmode="todate"),
+                        dict(count=14,
+                             label="14day",
+                             step="day",
+                             stepmode="backward"),
+                        dict(step="all")
+                    ])
+                ),
+                rangeslider=dict(
+                    visible=True
+                ),
+                type="date"
+            )
+        )
         
-    df_cavity = pd.DataFrame(
-                    df[(df['Curing_Date'] >= start_date) & (df['Curing_Date'] <= end_date)].\
-                    groupby(['curing_machine'])['Rejection_Reason'].\
-                             value_counts(normalize=True)).\
-                             rename(columns ={'Rejection_Reason':'Rejection_percent'})
-                             
-    df_total_tyres = df[(df['Curing_Date'] >= start_date) & (df['Curing_Date'] <= end_date)].groupby(['curing_machine']).\
-                    agg({'BARCODE':'count'}).\
-                    reset_index().\
-                    rename(columns={'BARCODE':'Total_tyres'})                         
-                             
-    
-    df_cavity = df_cavity.reset_index()
-    df_cavity = df_cavity.merge(df_total_tyres,on=["curing_machine"])    
-    df_cavity = df_cavity.loc[~(df_cavity['Rejection_Reason']=='No Rejection'),:]
-    df_cavity = df_cavity.dropna()    
-    df_cavity['Rejection_percent'] = round(df_cavity['Rejection_percent'] * 100,2)    
-    df_cavity['curing_machine'] = 'Cavity_' + df_cavity['curing_machine'].astype(str) 
-
-
-    df_cavity['Rejection_Reason']= pd.Categorical(df_cavity.Rejection_Reason,categories=["RFPP","Imbalance","CONICITY","Runout", "Bulge","Dent","Overall"])
-    df_cavity= df_cavity.sort_values(by=['Rejection_Reason'],axis=0)
-    
-    fig = px.bar(df_cavity, x="curing_machine", y="Rejection_percent", color="Rejection_Reason", text=[f'{i}%' for i in df_cavity['Rejection_percent']])
-    fig.update_layout(title_text="Rejection per Cavity")
-    fig.layout.yaxis.tickformat = '0'
-    st.plotly_chart(fig, use_container_width=True)           
-    
-    
-    fig2 = px.bar(df_cavity, x="curing_machine", y="Total_tyres",barmode='overlay', 
-                   text=[f'{i}' for i in df_cavity['Total_tyres']])
-    
-    fig2.update_layout(title_text="Number of Tyres")
-    
-    st.plotly_chart(fig2, use_container_width=True)           
-    
-    
-    st.write("% s seconds to run the code" % round((time.time() - start),3))
-    df_cavity['start_date'] =  start_date   
-    df_cavity['end_date'] =  end_date    
-    csv= df_cavity.to_csv().encode('utf-8')
-    st.download_button(
-   "Click to Download Data",
-    csv,
-   "Cavity_OverallRejection.csv",
-   "text/csv",
-   key='download-csv3'
-   )
-
-
-######################################Chart 3######################################################################
-with st.expander('Cavity Rejection by Reason Moving Average Charts'):
-    start = time.time()
-    start_date = df['Curing_Date'].min()
-    end_date = df['Curing_Date'].max()
-    
-    #######Date Selection for Cavity
-    col1, col2 = st.columns(2)
-    with col1:
-        starting_date = st.date_input('Starting date', start_date)
-    with col2:
-        ending_date = st.date_input('Ending date', end_date)
-    if starting_date > ending_date:
-        st.error('Error: End date must fall after start date.')
-
-        
-    df_stackchart_subset = df_stackchart.loc[(df_stackchart['Curing_Date'] >= starting_date) & (df_stackchart['Curing_Date'] <= ending_date),:]
-
-    MA_make_choice = st.selectbox('Select the Level for Rejection Values', 
-                                  ('Daily','3 Day Moving Average', 
-                                   '7 Day Moving Average', '5 Day Moving Average',
-                                   '14 Day Moving Average'))
-
-    
-    if MA_make_choice=='3 Day Moving Average':
-        rolling_val=3
-    elif MA_make_choice=='Daily':
-        rolling_val=1    
-    elif MA_make_choice=='7 Day Moving Average':
-        rolling_val=7
-    elif MA_make_choice=='5 Day Moving Average':
-        rolling_val=5
-    elif MA_make_choice=='14 Day Moving Average':
-        rolling_val=14
-
- 
-
-    df_stackchart_V2 =Rejection_MA_chart3_Processing(df_stackchart_subset, MA_make_choice,cavity_make_choice)
-
-    
-    
-    if cavity_make_choice[0] != 'ALL':
-        
-        fig = px.bar(df_stackchart_V2, x="Curing_Date", y='Rejection' + MA_make_choice , color="Rejection_Reason",
-                     text=[f'{i}%' for i in df_stackchart_V2['Rejection' + MA_make_choice]],category_orders={'Rejection_Reason':["Bulge","Dent","Runout","Conicity","Imbalance","RFPP"]})
-        
-        fig.update_layout(title_text="Rejection Moving Average (Each data point represents "+ MA_make_choice + " till that date)")
-        fig.update_yaxes(title_text="Yield Percentage", secondary_y=True)   
-        fig.layout.yaxis.tickformat = '0'
+        fig.update_layout(yaxis_range=[60,100])
         st.plotly_chart(fig, use_container_width=True)
-        
-        df_stackchart_V2['start_date'] = starting_date
-        df_stackchart_V2['end_date'] = ending_date
-        csv= df_stackchart_V2[['Curing_Date','Rejection_Reason','num_tyres','Total Tyres', 'Rejection' + MA_make_choice,'start_date','end_date']].to_csv().encode('utf-8')
+        csv= df_Yield.to_csv().encode('utf-8')
+        st.download_button(
+       "Click to Download Data",
+        csv,
+       "TBM_Yield"+MA_make_choice_chart1+".csv",
+       "text/csv",
+       key='download-csv1'
+       )
 
-    if cavity_make_choice[0]    == 'ALL':
-        unique_cavities = df_stackchart_V2['curing_machine'].unique().tolist()
+       
         
         
-        unique_cavities.remove("Overall")
-        unique_cavities.insert(0, "Overall")
+        fig1 = px.bar(df_rejection, x="Date", y='Rejection' + MA_make_choice_chart1 , color="Rejection_Reason",
+                             text=[f'{i}%' for i in df_rejection['Rejection' + MA_make_choice_chart1]]) 
+        fig1.layout.yaxis.tickformat = '0'
+        fig1.update_layout(title_text= "TBM Rejection Chart")
+        st.plotly_chart(fig1, use_container_width=True)
+                
+        st.write("% s seconds to run the code" % round((time.time() - start),3))      
+       
+        csv= df_rejection[['Date','Rejection_Reason','num_tyres','Total_Tyres','Rejection' + MA_make_choice_chart1]].to_csv().encode('utf-8')
+        st.download_button(
+       "Click to Download Data",
+        csv,
+       "TBM_"+MA_make_choice_chart1+"_Rejection.csv",
+       "text/csv",
+       key='download-csv2'
+       )
 
-        for count, value in enumerate(unique_cavities):  
-            temp = df_stackchart_V2.loc[df_stackchart_V2['curing_machine']==value,:]
-            combs = pd.DataFrame(list(product(df_stackchart_V2['Curing_Date'].unique(), df_stackchart_V2['Rejection_Reason'].unique())), 
-                         columns=['Curing_Date', 'Rejection_Reason'])
-            temp = temp.merge(combs,  how = 'right').fillna(0)
 
-            fig = px.bar(temp, x="Curing_Date", y='Rejection' + MA_make_choice , color="Rejection_Reason",
-                         text=[f'{i}%' for i in temp['Rejection' + MA_make_choice]]) 
+
+    ###########################################Chart 2--Cavity Chart
+    with st.expander('Cavity Comparison -Overall'):
+        start = time.time()
+    #########Calendar for Cacity Comparison
+        min_date = df['Curing_Date'].min()
+        max_date = df['Curing_Date'].max()
+        #######Date Selection for Cavity
+        col1, col2 = st.columns(2)
+        with col1:
+            start_date = st.date_input('Start date', min_date)
+        with col2:
+            end_date = st.date_input('End date', max_date)
+        if start_date > end_date:
+            st.error('Error: End date must fall after start date.')
+            
+
+
+            
+        df_cavity = pd.DataFrame(
+                        df[(df['Curing_Date'] >= start_date) & (df['Curing_Date'] <= end_date)].\
+                        groupby(['curing_machine'])['Rejection_Reason'].\
+                                 value_counts(normalize=True)).\
+                                 rename(columns ={'Rejection_Reason':'Rejection_percent'})
+                                 
+        df_total_tyres = df[(df['Curing_Date'] >= start_date) & (df['Curing_Date'] <= end_date)].groupby(['curing_machine']).\
+                        agg({'BARCODE':'count'}).\
+                        reset_index().\
+                        rename(columns={'BARCODE':'Total_tyres'})                         
+                                 
+        
+        df_cavity = df_cavity.reset_index()
+        df_cavity = df_cavity.merge(df_total_tyres,on=["curing_machine"])    
+        df_cavity = df_cavity.loc[~(df_cavity['Rejection_Reason']=='No Rejection'),:]
+        df_cavity = df_cavity.dropna()    
+        df_cavity['Rejection_percent'] = round(df_cavity['Rejection_percent'] * 100,2)    
+        df_cavity['curing_machine'] = 'Cavity_' + df_cavity['curing_machine'].astype(str) 
+
+
+        df_cavity['Rejection_Reason']= pd.Categorical(df_cavity.Rejection_Reason,categories=["RFPP","Imbalance","CONICITY","Runout", "Bulge","Dent","Overall"])
+        df_cavity= df_cavity.sort_values(by=['Rejection_Reason'],axis=0)
+        
+        fig = px.bar(df_cavity, x="curing_machine", y="Rejection_percent", color="Rejection_Reason", text=[f'{i}%' for i in df_cavity['Rejection_percent']])
+        fig.update_layout(title_text="Rejection per Cavity")
+        fig.layout.yaxis.tickformat = '0'
+        st.plotly_chart(fig, use_container_width=True)           
+        
+        
+        fig2 = px.bar(df_cavity, x="curing_machine", y="Total_tyres",barmode='overlay', 
+                       text=[f'{i}' for i in df_cavity['Total_tyres']])
+        
+        fig2.update_layout(title_text="Number of Tyres")
+        
+        st.plotly_chart(fig2, use_container_width=True)           
+        
+        
+        st.write("% s seconds to run the code" % round((time.time() - start),3))
+        df_cavity['start_date'] =  start_date   
+        df_cavity['end_date'] =  end_date    
+        csv= df_cavity.to_csv().encode('utf-8')
+        st.download_button(
+       "Click to Download Data",
+        csv,
+       "Cavity_OverallRejection.csv",
+       "text/csv",
+       key='download-csv3'
+       )
+
+
+    ######################################Chart 3######################################################################
+    with st.expander('Cavity Rejection by Reason Moving Average Charts'):
+        start = time.time()
+        start_date = df['Curing_Date'].min()
+        end_date = df['Curing_Date'].max()
+        
+        #######Date Selection for Cavity
+        col1, col2 = st.columns(2)
+        with col1:
+            starting_date = st.date_input('Starting date', start_date)
+        with col2:
+            ending_date = st.date_input('Ending date', end_date)
+        if starting_date > ending_date:
+            st.error('Error: End date must fall after start date.')
+
+            
+        df_stackchart_subset = df_stackchart.loc[(df_stackchart['Curing_Date'] >= starting_date) & (df_stackchart['Curing_Date'] <= ending_date),:]
+
+        MA_make_choice = st.selectbox('Select the Level for Rejection Values', 
+                                      ('Daily','3 Day Moving Average', 
+                                       '7 Day Moving Average', '5 Day Moving Average',
+                                       '14 Day Moving Average'))
+
+        
+        if MA_make_choice=='3 Day Moving Average':
+            rolling_val=3
+        elif MA_make_choice=='Daily':
+            rolling_val=1    
+        elif MA_make_choice=='7 Day Moving Average':
+            rolling_val=7
+        elif MA_make_choice=='5 Day Moving Average':
+            rolling_val=5
+        elif MA_make_choice=='14 Day Moving Average':
+            rolling_val=14
+
+     
+
+        df_stackchart_V2 =Rejection_MA_chart3_Processing(df_stackchart_subset, MA_make_choice,cavity_make_choice)
+
+        
+        
+        if cavity_make_choice[0] != 'ALL':
+            
+            fig = px.bar(df_stackchart_V2, x="Curing_Date", y='Rejection' + MA_make_choice , color="Rejection_Reason",
+                         text=[f'{i}%' for i in df_stackchart_V2['Rejection' + MA_make_choice]],category_orders={'Rejection_Reason':["Bulge","Dent","Runout","Conicity","Imbalance","RFPP"]})
+            
+            fig.update_layout(title_text="Rejection Moving Average (Each data point represents "+ MA_make_choice + " till that date)")
+            fig.update_yaxes(title_text="Yield Percentage", secondary_y=True)   
             fig.layout.yaxis.tickformat = '0'
-            fig.update_layout(title_text= "Cavity-" +str(value)+ " - Each data point represents rejection"+ MA_make_choice + " till that date")
             st.plotly_chart(fig, use_container_width=True)
             
-        
-        df_stackchart_V2['start_date'] = starting_date
-        df_stackchart_V2['end_date'] = ending_date
-        
-        
-        csv= df_stackchart_V2[['Curing_Date','curing_machine','Rejection_Reason','num_tyres','Total Tyres', 'Rejection' + MA_make_choice,'start_date','end_date']].to_csv().encode('utf-8')
+            df_stackchart_V2['start_date'] = starting_date
+            df_stackchart_V2['end_date'] = ending_date
+            csv= df_stackchart_V2[['Curing_Date','Rejection_Reason','num_tyres','Total Tyres', 'Rejection' + MA_make_choice,'start_date','end_date']].to_csv().encode('utf-8')
 
+        if cavity_make_choice[0]    == 'ALL':
+            unique_cavities = df_stackchart_V2['curing_machine'].unique().tolist()
+            
+            
+            unique_cavities.remove("Overall")
+            unique_cavities.insert(0, "Overall")
 
-    st.write("% s seconds to run the code" % round((time.time() - start),3))      
-    st.download_button(
-   "Click to Download Data",
-    csv,
-   "Cavity_Rejection_"+MA_make_choice +".csv",
-   "text/csv",
-   key='download-csv4')
+            for count, value in enumerate(unique_cavities):  
+                temp = df_stackchart_V2.loc[df_stackchart_V2['curing_machine']==value,:]
+                combs = pd.DataFrame(list(product(df_stackchart_V2['Curing_Date'].unique(), df_stackchart_V2['Rejection_Reason'].unique())), 
+                             columns=['Curing_Date', 'Rejection_Reason'])
+                temp = temp.merge(combs,  how = 'right').fillna(0)
 
-######################################Chart 3######################################################################
-with st.expander('Daily Uniformity Parameter Chart'):
-    start = time.time()
-    option = st.selectbox(
-         'Select Uniformity Parameter',
-         ('RFVCW', 'CONICITY', 'Static'))
-    
-    MA_make_choice_chart4 = st.selectbox('Select the level for uniformity parameter', 
-                                  ('Daily','3 Day Moving Average', 
-                                   '7 Day Moving Average', '5 Day Moving Average',
-                                   '14 Day Moving Average'))
-
-    
-    if MA_make_choice_chart4=='3 Day Moving Average':
-        rolling_val=3
-    elif MA_make_choice_chart4=='Daily':
-        rolling_val=1    
-    elif MA_make_choice_chart4=='7 Day Moving Average':
-        rolling_val=7
-    elif MA_make_choice_chart4=='5 Day Moving Average':
-        rolling_val=5
-    elif MA_make_choice_chart4=='14 Day Moving Average':
-        rolling_val=14
-    
-        
-    df_paramchart_V1 = df_paramchart
-    
-    df_paramchart_V1[option +'_sum_'+ MA_make_choice_chart4] = df_paramchart_V1[option].\
-                                                        transform(lambda x: x.rolling(rolling_val).sum())  
-                                                        
-    df_paramchart_V1['Totaltyres_'+ MA_make_choice_chart4] = df_paramchart_V1['Total Tyres'].\
-                                                        transform(lambda x: x.rolling(rolling_val).sum())  
-                                                        
-    df_paramchart_V1[option+'_'+ MA_make_choice_chart4]  =   (df_paramchart_V1[option +'_sum_'+ MA_make_choice_chart4]/ df_paramchart_V1['Totaltyres_'+ MA_make_choice_chart4])                                         
-    
-    fig = go.Figure()
-    fig.add_trace(go.Bar(x=list(df_paramchart_V1['Date']),
-                         y=list(df_paramchart_V1[option +'_'+ MA_make_choice_chart4]),name= option,opacity=1,marker_line_color='#11457E'))
-    
-  
-        
-    fig.update_layout(
-        title_text="Daily Uniformity Parameter"
-    )
-        
-     
-    # Add range slider
-    fig.update_layout(
-        xaxis=dict(
-            rangeselector=dict(
-                buttons=list([
-                    dict(count=8,
-                         label="1shift",
-                         step="hour",
-                         stepmode="backward"),
-                    dict(count=1,
-                         label="1day",
-                         step="day",
-                         stepmode="backward"),
-                    dict(count=3,
-                         label="3day",
-                         step="day",
-                         stepmode="backward"),
-                    dict(count=7,
-                         label="7day",
-                         step="day",
-                         stepmode="todate"),
-                    dict(count=14,
-                         label="14day",
-                         step="day",
-                         stepmode="backward"),
-                    dict(step="all")
-                ])
-            ),
-            rangeslider=dict(
-                visible=True
-            ),
-            type="date"
-        )
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
-    csv= df_paramchart_V1[['Date','Total Tyres',option+'_'+ MA_make_choice_chart4]].to_csv().encode('utf-8')
-    st.write("% s seconds to run the code" % round((time.time() - start),3))      
-    st.download_button(
-   "Click to Download Data",
-    csv,
-   "Uniformity_Parameter"+MA_make_choice_chart4+".csv",
-   "text/csv",
-   key='download-csv5'
-   )
-
-#
-################Code for Triggers
-#
-with st.expander('Daily Triggers'):
-    start = time.time()
-    if cavity_make_choice[0]=="ALL":        
+                fig = px.bar(temp, x="Curing_Date", y='Rejection' + MA_make_choice , color="Rejection_Reason",
+                             text=[f'{i}%' for i in temp['Rejection' + MA_make_choice]]) 
+                fig.layout.yaxis.tickformat = '0'
+                fig.update_layout(title_text= "Cavity-" +str(value)+ " - Each data point represents rejection"+ MA_make_choice + " till that date")
+                st.plotly_chart(fig, use_container_width=True)
                 
+            
+            df_stackchart_V2['start_date'] = starting_date
+            df_stackchart_V2['end_date'] = ending_date
+            
+            
+            csv= df_stackchart_V2[['Curing_Date','curing_machine','Rejection_Reason','num_tyres','Total Tyres', 'Rejection' + MA_make_choice,'start_date','end_date']].to_csv().encode('utf-8')
+
+
+        st.write("% s seconds to run the code" % round((time.time() - start),3))      
+        st.download_button(
+       "Click to Download Data",
+        csv,
+       "Cavity_Rejection_"+MA_make_choice +".csv",
+       "text/csv",
+       key='download-csv4')
+
+    ######################################Chart 3######################################################################
+    with st.expander('Daily Uniformity Parameter Chart'):
+        start = time.time()
+        option = st.selectbox(
+             'Select Uniformity Parameter',
+             ('RFVCW', 'CONICITY', 'Static'))
         
-        start_data = df_stackchart['Curing_Date'].min()
-        end_data = df_stackchart['Curing_Date'].max() 
-        max_date = st.date_input('Select the Date', value=end_data,min_value=start_data, max_value=end_data)
+        MA_make_choice_chart4 = st.selectbox('Select the level for uniformity parameter', 
+                                      ('Daily','3 Day Moving Average', 
+                                       '7 Day Moving Average', '5 Day Moving Average',
+                                       '14 Day Moving Average'))
+
         
-        ##################Calling the function
-        df_stackchart_trigger,top_df,last_day = Daily_Triggers(df_stackchart, max_date)
-  
+        if MA_make_choice_chart4=='3 Day Moving Average':
+            rolling_val=3
+        elif MA_make_choice_chart4=='Daily':
+            rolling_val=1    
+        elif MA_make_choice_chart4=='7 Day Moving Average':
+            rolling_val=7
+        elif MA_make_choice_chart4=='5 Day Moving Average':
+            rolling_val=5
+        elif MA_make_choice_chart4=='14 Day Moving Average':
+            rolling_val=14
         
-        st.subheader('Overall Rejections - selected day compared to last day')
-        second_last_day = df_stackchart_trigger.loc[df_stackchart_trigger['Curing_Date'] ==(max_date -pd.to_timedelta("1day")) ,:].drop(['Curing_Date'], axis=1)
-    
-    
-        col1, col2, col3 = st.columns(3)
-        RFPP_overall=last_day.loc[(last_day['Rejection_Reason']=='RFPP') &(last_day['curing_machine']=='Overall')  ,'Rejection_percent']
-        Imbalance_overall=last_day.loc[(last_day['Rejection_Reason']=='Imbalance') &(last_day['curing_machine']=='Overall')  ,'Rejection_percent']
-        Total_overall=last_day.loc[(last_day['Rejection_Reason']=='Total') &(last_day['curing_machine']=='Overall')  ,'Rejection_percent']
+            
+        df_paramchart_V1 = df_paramchart
         
-        RFPP_secondlast=second_last_day.loc[(second_last_day['Rejection_Reason']=='RFPP') &(second_last_day['curing_machine']=='Overall')  ,'Rejection_percent']
-        Imbalance_secondlast=second_last_day.loc[(second_last_day['Rejection_Reason']=='Imbalance') &(second_last_day['curing_machine']=='Overall')  ,'Rejection_percent']
-        Total_secondlast=second_last_day.loc[(second_last_day['Rejection_Reason']=='Total') &(second_last_day['curing_machine']=='Overall')  ,'Rejection_percent']
-  
-        col1.metric('RFPP %',value=round(RFPP_overall,2), delta=round(float(RFPP_overall)-float(RFPP_secondlast),2), delta_color="inverse")
-        col2.metric('Imbalance %',value=round(Imbalance_overall,2), delta=round(float(Imbalance_overall)-float(Imbalance_secondlast),2), delta_color="inverse")
-        col3.metric('Total %',value= round(Total_overall,2), delta=round(float(Total_overall)-float(Total_secondlast),2), delta_color="inverse")
-    
-    
-        st.subheader('Rejection Trends')
-        ###############parameters##############
-        cut_off = st.slider('Select the Cut off Percent',min_value=0, max_value=100,value=10) 
-        cut_off=cut_off/100        
-        lookback_time = st.slider('Select the Look back Time Period',min_value=2, max_value=15,value=7)+3
-        ###########################################
+        df_paramchart_V1[option +'_sum_'+ MA_make_choice_chart4] = df_paramchart_V1[option].\
+                                                            transform(lambda x: x.rolling(rolling_val).sum())  
+                                                            
+        df_paramchart_V1['Totaltyres_'+ MA_make_choice_chart4] = df_paramchart_V1['Total Tyres'].\
+                                                            transform(lambda x: x.rolling(rolling_val).sum())  
+                                                            
+        df_paramchart_V1[option+'_'+ MA_make_choice_chart4]  =   (df_paramchart_V1[option +'_sum_'+ MA_make_choice_chart4]/ df_paramchart_V1['Totaltyres_'+ MA_make_choice_chart4])                                         
+        
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=list(df_paramchart_V1['Date']),
+                             y=list(df_paramchart_V1[option +'_'+ MA_make_choice_chart4]),name= option,opacity=1,marker_line_color='#11457E'))
+        
+      
+            
+        fig.update_layout(
+            title_text="Daily Uniformity Parameter"
+        )
+            
+         
+        # Add range slider
+        fig.update_layout(
+            xaxis=dict(
+                rangeselector=dict(
+                    buttons=list([
+                        dict(count=8,
+                             label="1shift",
+                             step="hour",
+                             stepmode="backward"),
+                        dict(count=1,
+                             label="1day",
+                             step="day",
+                             stepmode="backward"),
+                        dict(count=3,
+                             label="3day",
+                             step="day",
+                             stepmode="backward"),
+                        dict(count=7,
+                             label="7day",
+                             step="day",
+                             stepmode="todate"),
+                        dict(count=14,
+                             label="14day",
+                             step="day",
+                             stepmode="backward"),
+                        dict(step="all")
+                    ])
+                ),
+                rangeslider=dict(
+                    visible=True
+                ),
+                type="date"
+            )
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        csv= df_paramchart_V1[['Date','Total Tyres',option+'_'+ MA_make_choice_chart4]].to_csv().encode('utf-8')
+        st.write("% s seconds to run the code" % round((time.time() - start),3))      
+        st.download_button(
+       "Click to Download Data",
+        csv,
+       "Uniformity_Parameter"+MA_make_choice_chart4+".csv",
+       "text/csv",
+       key='download-csv5'
+       )
+
+    #
+    ################Code for Triggers
+    #
+    with st.expander('Daily Triggers'):
+        start = time.time()
+        if cavity_make_choice[0]=="ALL":        
+                    
+            
+            start_data = df_stackchart['Curing_Date'].min()
+            end_data = df_stackchart['Curing_Date'].max() 
+            max_date = st.date_input('Select the Date', value=end_data,min_value=start_data, max_value=end_data)
+            
+            ##################Calling the function
+            df_stackchart_trigger,top_df,last_day = Daily_Triggers(df_stackchart, max_date)
+      
+            
+            st.subheader('Overall Rejections - selected day compared to last day')
+            second_last_day = df_stackchart_trigger.loc[df_stackchart_trigger['Curing_Date'] ==(max_date -pd.to_timedelta("1day")) ,:].drop(['Curing_Date'], axis=1)
         
         
-        df_stackchart_trigger,trend_df = Daily_rejection_trends(df_stackchart_trigger, max_date,lookback_time)
-       
-        trend_df= trend_df.loc[trend_df['Rejection_3DMA'] >= ((1+cut_off) * trend_df['Rejection_avg_3DMA'])  ,:].reset_index(drop=True)
-        display_text = 'Cavity Rejections having 3DMA(3 day moving average) rejection of the selected day '+str(round(cut_off *100))+'% greater than\nof last '+ str(lookback_time) +' days average 3DMA is highlighted'
-        st.text(display_text)
-        st.write(trend_df)
-    
-        st.subheader('Worst Rejections- selected day')
-        st.text('Worst 3 cavity rejections for selected day is highlighted')
-        top_df = top_df.loc[top_df['tyres_rejected']>0,:]
-        st.write(top_df.loc[top_df['Rejection_Reason']=='Total' ,:])
-        st.write(top_df.loc[top_df['Rejection_Reason']=='RFPP' ,:])
-        st.write(top_df.loc[top_df['Rejection_Reason']=='Imbalance' ,:])
+            col1, col2, col3 = st.columns(3)
+            RFPP_overall=last_day.loc[(last_day['Rejection_Reason']=='RFPP') &(last_day['curing_machine']=='Overall')  ,'Rejection_percent']
+            Imbalance_overall=last_day.loc[(last_day['Rejection_Reason']=='Imbalance') &(last_day['curing_machine']=='Overall')  ,'Rejection_percent']
+            Total_overall=last_day.loc[(last_day['Rejection_Reason']=='Total') &(last_day['curing_machine']=='Overall')  ,'Rejection_percent']
+            
+            RFPP_secondlast=second_last_day.loc[(second_last_day['Rejection_Reason']=='RFPP') &(second_last_day['curing_machine']=='Overall')  ,'Rejection_percent']
+            Imbalance_secondlast=second_last_day.loc[(second_last_day['Rejection_Reason']=='Imbalance') &(second_last_day['curing_machine']=='Overall')  ,'Rejection_percent']
+            Total_secondlast=second_last_day.loc[(second_last_day['Rejection_Reason']=='Total') &(second_last_day['curing_machine']=='Overall')  ,'Rejection_percent']
+      
+            col1.metric('RFPP %',value=round(RFPP_overall,2), delta=round(float(RFPP_overall)-float(RFPP_secondlast),2), delta_color="inverse")
+            col2.metric('Imbalance %',value=round(Imbalance_overall,2), delta=round(float(Imbalance_overall)-float(Imbalance_secondlast),2), delta_color="inverse")
+            col3.metric('Total %',value= round(Total_overall,2), delta=round(float(Total_overall)-float(Total_secondlast),2), delta_color="inverse")
+        
+        
+            st.subheader('Rejection Trends')
+            ###############parameters##############
+            cut_off = st.slider('Select the Cut off Percent',min_value=0, max_value=100,value=10) 
+            cut_off=cut_off/100        
+            lookback_time = st.slider('Select the Look back Time Period',min_value=2, max_value=15,value=7)+3
+            ###########################################
+            
+            
+            df_stackchart_trigger,trend_df = Daily_rejection_trends(df_stackchart_trigger, max_date,lookback_time)
+           
+            trend_df= trend_df.loc[trend_df['Rejection_3DMA'] >= ((1+cut_off) * trend_df['Rejection_avg_3DMA'])  ,:].reset_index(drop=True)
+            display_text = 'Cavity Rejections having 3DMA(3 day moving average) rejection of the selected day '+str(round(cut_off *100))+'% greater than\nof last '+ str(lookback_time) +' days average 3DMA is highlighted'
+            st.text(display_text)
+            st.write(trend_df)
+        
+            st.subheader('Worst Rejections- selected day')
+            st.text('Worst 3 cavity rejections for selected day is highlighted')
+            top_df = top_df.loc[top_df['tyres_rejected']>0,:]
+            st.write(top_df.loc[top_df['Rejection_Reason']=='Total' ,:])
+            st.write(top_df.loc[top_df['Rejection_Reason']=='RFPP' ,:])
+            st.write(top_df.loc[top_df['Rejection_Reason']=='Imbalance' ,:])
 
 
     st.write("% s seconds to run the code" % round((time.time() - start),3))     
