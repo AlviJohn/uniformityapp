@@ -167,6 +167,7 @@ if data_option =='Manual_Upload':
     uploaded_file = st.file_uploader("Choose a file")
     if uploaded_file is not None:
         df = pd.read_excel(uploaded_file,sheet_name='Sheet1')
+        df_temp=df.loc[((df['tbmref'] ==TBM_make_choice))
 else:
     uploaded_file = 'Cloud_Data_Ingestion'
     df = cloud_datafetch()
@@ -187,6 +188,7 @@ if uploaded_file is not None:
     SKU_choices = df['TireType'].unique().tolist()
     SKU_make_choice = st.sidebar.selectbox('Select SKU', SKU_choices)
     SKU_make_choice = SKU_make_choice
+    df = df.loc[((df['TireType'] ==SKU_make_choice))]
 
 
     ###Selecting the TBM 
