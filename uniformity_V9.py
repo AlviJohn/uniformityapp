@@ -199,7 +199,7 @@ if uploaded_file is not None:
     TBM_choices = df['tbmref'].unique().tolist()
 
     ###For Display Purpose only
-        if data_option =='Cloud_Data_Ingestion':
+    if data_option =='Cloud_Data_Ingestion':
         TBM_choices.insert(0,"S19")
 
     TBM_make_choice = st.sidebar.selectbox('Select TBM', TBM_choices)
