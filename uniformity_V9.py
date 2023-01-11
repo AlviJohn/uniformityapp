@@ -185,7 +185,11 @@ if uploaded_file is not None:
 
     ###Selecting SKU
     SKU_choices = df['TireType'].unique().tolist()
-    SKU_choices.insert(0,"FT16350681")
+    
+    ###For Display Purpose only
+    if data_option =='Cloud_Data_Ingestion':
+        SKU_choices.insert(0,"FT16350681")
+    
     SKU_make_choice = st.sidebar.selectbox('Select SKU', SKU_choices)
     SKU_make_choice = SKU_make_choice
     df = df.loc[((df['TireType'] ==SKU_make_choice))]
@@ -193,7 +197,15 @@ if uploaded_file is not None:
 
     ###Selecting the TBM 
     TBM_choices = df['tbmref'].unique().tolist()
+
+    ###For Display Purpose only
+        if data_option =='Cloud_Data_Ingestion':
+        TBM_choices.insert(0,"S19")
+
     TBM_make_choice = st.sidebar.selectbox('Select TBM', TBM_choices)
+    
+
+
     TBM_make_choice = TBM_make_choice
     ###########Selecting Cavity
 
