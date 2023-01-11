@@ -9,6 +9,10 @@ from itertools import product
 from datetime import datetime
 import time
 from PIL import Image
+from azure.storage.blob import BlobServiceClient,ContentSettings, ContainerClient
+import os
+from datetime import date, timedelta
+
 
 ######Setting the Basics for the Page
 st.set_page_config(page_title="UniformityApp", page_icon="muscleman.jpg", layout="wide", initial_sidebar_state="auto")
@@ -105,8 +109,74 @@ def data_paramchart(df):
     return df_temp
 
 
+@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+def data_paramchart(df):
+    df_temp = df[['Date','RFVCW','CONICITY','Static','BARCODE']]
+    df_temp = df_temp.groupby(['Date']).\
+                    agg({'BARCODE':'count','RFVCW':'sum','CONICITY':'sum','Static':'sum'  }).\
+                    reset_index().\
+                    rename(columns={'BARCODE':'Total Tyres'}) 
+    
+    df_temp= df_temp.sort_values(by=['Date'],axis=0) 
+    return df_temp
 
-uploaded_file = st.file_uploader("Choose a file")
+
+
+@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+def cloud_datafetch():
+    ###Connection with Azure Container
+    source_key = 'wqzYUdetZd6ZkgSQIQsIDnU5n4OolDudleEsEPLClMdvxR8u3aZLOXvRpSI1oKzILo8kx3vnUlaWajxGZl5HbQ=='
+    source_account_name = 'uniformity'
+    block_blob_service = BlobServiceClient(account_url=f'https://{source_account_name}.blob.core.windows.net/', credential=source_key)
+    client = block_blob_service.get_container_client('uniformityanalysis')
+
+    print('connection established')
+    ###File name 
+    filename = 'TUO-DATA.csv'
+
+    ### last 2 months date
+    start_date = date.today()
+    end_date = start_date - timedelta(days=30) #as if now given last 2 days / in case of month timedelta(months=2)
+    daterange = pd.date_range(end_date, start_date)
+
+    lists=[]
+    tuocols= ['TireType','gt_dom','curing_dom','rej_param','tbmref','curing_machine','BARCODE','RFVCW', 'CONICITY', 'Static']
+    ### fetching files ending with TUO-DAA.csv for last 2 months
+    for date_ in daterange:
+        blob_list = client.list_blobs( name_starts_with="Raw-Data/" + date_.strftime('%m-%d-%Y') + '/')
+        for blob in blob_list:
+            text=blob.name
+            if text.endswith(filename):
+                lists.append(text)
+    st.write('Fetched file names')
+
+    final_df = pd.DataFrame()
+    ### read files as df and save it as csv files in local machine
+    for blobs in lists:
+        a=blobs.replace(" ", "%20")
+        df= pd.read_csv('https://uniformity.blob.core.windows.net/uniformityanalysis/{file_}'.format(file_=a),low_memory = True,usecols =tuocols)
+        final_df = final_df.append(df, ignore_index=True)
+
+    return final_df
+
+
+
+data_option = st.radio("Please select the Data Option",('Cloud_Data_Ingestion', 'Manual_Upload'))
+
+if data_option =='Manual_Upload':
+    uploaded_file = st.file_uploader("Choose a file")
+else:
+    uploaded_file = cloud_datafetch()
+    st.write('Data Correctly Fetched')
+
+
+
+
+
+
+
+
+
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file,sheet_name='Sheet1')
     df= process_input(df)
