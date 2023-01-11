@@ -136,7 +136,7 @@ def cloud_datafetch():
 
     ### last 2 months date
     start_date = date.today()
-    end_date = start_date - timedelta(days=30) #as if now given last 2 days / in case of month timedelta(months=2)
+    end_date = start_date - timedelta(days=60) #as if now given last 2 days / in case of month timedelta(months=2)
     daterange = pd.date_range(end_date, start_date)
 
     lists=[]
@@ -170,8 +170,8 @@ if data_option =='Manual_Upload':
 if data_option =='Cloud_Data_Ingestion':
     uploaded_file = 'Cloud_Data_Ingestion'
     df = cloud_datafetch()
-    st.write(df.head())
-    st.write('Data Correctly Fetched')
+    #st.write(df.head())
+    st.write('Fetched Last 2 months of TUO Data')
 
 
 
@@ -185,7 +185,7 @@ if uploaded_file is not None:
 
     ###Selecting SKU
     SKU_choices = df['TireType'].unique().tolist()
-    SKU_choices.insert(0,"CT16363241")
+    SKU_choices.insert(0,"FT16350681")
     SKU_make_choice = st.sidebar.selectbox('Select SKU', SKU_choices)
     SKU_make_choice = SKU_make_choice
     df = df.loc[((df['TireType'] ==SKU_make_choice))]
