@@ -165,20 +165,18 @@ data_option = st.radio("Please select the Data Option",('Cloud_Data_Ingestion', 
 
 if data_option =='Manual_Upload':
     uploaded_file = st.file_uploader("Choose a file")
+    if uploaded_file is not None:
+        df = pd.read_excel(uploaded_file,sheet_name='Sheet1')
 else:
-    uploaded_file = cloud_datafetch()
+    uploaded_file = 'Cloud_Data_Ingestion'
+    df = cloud_datafetch()
+    st.write(df.head())
     st.write('Data Correctly Fetched')
 
 
 
-
-
-
-
-
-
 if uploaded_file is not None:
-    df = pd.read_excel(uploaded_file,sheet_name='Sheet1')
+    
     df= process_input(df)
 
     ###########################################Selections#########################################
